@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: tech_marketplace_api
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    env_file:
+      - ./apps/api/.env
+    environment:
+      - PORT=4000
+    networks:
+      - ecom_network
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: tech_marketplace_web
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./apps/web/.env.local
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:4000
+    depends_on:
+      - api
+    networks:
+      - ecom_network
+
+networks:
+  ecom_network:
+    driver: bridge

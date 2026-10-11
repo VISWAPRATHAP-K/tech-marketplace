@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  CUSTOMER
+  STORE_OWNER
+  SUPER_ADMIN
+}
+
+enum ProductCondition {
+  BRAND_NEW
+  LIKE_NEW
+  REFURBISHED
+  USED
+}
+
+enum ProductStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  RESOLVED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stores    Store[]
+  bookings  Booking[]
+}
+
+model Store {
+  id          String   @id @default(uuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+  coverImage  String?
+  address     String
+  city        String
+  state       String?
+  postalCode  String?
+  latitude    Float?
+  longitude   Float?
+  phone       String
+  whatsapp    String
+  rating      Float    @default(4.8)
+  isApproved  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products    Product[]
+  bookings    Booking[]
+  enquiries   Enquiry[]
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  icon        String?
+  description String?
+  products    Product[]
+}
+
+model Product {
+  id              String           @id @default(uuid())
+  storeId         String
+  store           Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  title           String
+  slug            String           @unique
+  brand           String
+  model           String
+  description     String
+  price           Float
+  originalPrice   Float?
+  condition       ProductCondition @default(BRAND_NEW)
+  status          ProductStatus    @default(AVAILABLE)
+  warrantyMonths  Int              @default(12)
+  batteryHealthPct Int?
+  images          String[]
+  isFeatured      Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  specifications  ProductSpec?
+  bookings        Booking[]
+  enquiries       Enquiry[]
+}
+
+model ProductSpec {
+  id         String   @id @default(uuid())
+  productId  String   @unique
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cpu        String?
+  gpu        String?
+  ram        String?
+  storage    String?
+  display    String?
+  os         String?
+  color      String?
+  additional Json?
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  storeId       String
+  store         Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  bookingDate   DateTime
+  status        BookingStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Enquiry {
+  id            String        @id @default(uuid())
+  productId     String?
+  product       Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  storeId       String
+  store         Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  message       String
+  status        EnquiryStatus @default(NEW)
+  createdAt     DateTime      @default(now())
+}

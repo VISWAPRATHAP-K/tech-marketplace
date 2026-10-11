@@ -1,0 +1,19 @@
+{
+  "name": "tech-marketplace-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"WEB,API\" -c \"cyan,magenta\" \"npm run dev --workspace=web\" \"npm run start:dev --workspace=api\"",
+    "dev:web": "npm run dev --workspace=web",
+    "dev:api": "npm run start:dev --workspace=api",
+    "build:web": "npm run build --workspace=web",
+    "build:api": "npm run build --workspace=api",
+    "build": "npm run build:api && npm run build:web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}
